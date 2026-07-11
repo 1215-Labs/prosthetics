@@ -1,7 +1,7 @@
 [project]
-name = "vsa-fastapi-project"
+name = "prosthetics-research"
 version = "0.1.0"
-description = "FastAPI + PostgreSQL starter with vertical slice architecture, optimized for AI coding"
+description = "FastAPI + PostgreSQL platform for public prosthetics research with AI/LLM-assisted scientific discovery"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -66,6 +66,7 @@ ignore = [
 "__init__.py" = ["F401"]  # Allow unused imports in package init
 "scripts/**/*.py" = ["T201"]  # Allow print in scripts
 "app/core/health.py" = ["B008"]  # FastAPI Depends() in defaults is the recommended pattern
+"app/research/routes.py" = ["B008"]  # FastAPI Depends() in defaults is the recommended pattern
 
 [tool.ruff.format]
 quote-style = "double"
@@ -90,6 +91,14 @@ disallow_untyped_decorators = false
 # Allow test files to have less strict typing
 [[tool.mypy.overrides]]
 module = "*.tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "*.*.tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "app.research.tests.*"
 disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]

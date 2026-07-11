@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     )
 
     # Application metadata
-    app_name: str = "Obsidian Agent Project"
+    app_name: str = "Prosthetics Research API"
     version: str = "0.1.0"
     environment: str = "development"
     log_level: str = "INFO"
@@ -40,6 +40,15 @@ class Settings(BaseSettings):
 
     # CORS settings
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:8123"]
+
+    # LLM integration - supply at least one provider key to enable AI features
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
+    # Default LLM provider: "openai" or "anthropic"
+    llm_provider: str = "openai"
+    # Model identifiers for each provider
+    openai_model: str = "gpt-4o"
+    anthropic_model: str = "claude-opus-4-5"
 
 
 @lru_cache

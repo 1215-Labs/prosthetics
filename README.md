@@ -1,73 +1,97 @@
-# FastAPI + PostgreSQL Template
+# Prosthetics Research API
 
-Production-ready FastAPI template with vertical slice architecture, optimized for AI-assisted development.
+Public research platform for prosthetics and prosthetic devices, powered by FastAPI + PostgreSQL and AI/LLM-assisted scientific discovery.
 
-**Zero config • Type-safe • AI-coding-optimized**
+## Purpose
+
+This repository supports open scientific research in the domain of prosthetics and prosthetic devices.  Researchers can:
+
+- **Manage research papers** – store and query bibliographic records with abstracts, authors, DOIs, and tags
+- **AI-powered analysis** – submit scientific questions about any paper to an LLM (OpenAI or Anthropic) for expert-level analysis, critique, and discovery
+- **Tag-based discovery** – filter papers by research tags (e.g. `myoelectric`, `hand`, `osseointegration`, `EMG`)
 
 ## Quick Start
 
 ```bash
-# 1. Use this template (GitHub) or clone
-git clone <your-repo>
-cd <your-project>
+# 1. Clone the repository
+git clone <repo-url>
+cd prosthetics
 
 # 2. Install dependencies
 uv sync
 
-# 3. Start services
+# 3. Configure environment
+cp .env.example .env
+# Edit .env – set DATABASE_URL and at least one LLM API key
+
+# 4. Start services
 docker-compose up -d
 
-# 4. Run migrations
+# 5. Run migrations
 uv run alembic upgrade head
 
-# 5. Start development
+# 6. Start development server
 uv run uvicorn app.main:app --reload --port 8123
 ```
 
-Visit `http://localhost:8123/docs` for Swagger UI.
+Visit `http://localhost:8123/docs` for the interactive Swagger UI.
 
-## What's Inside
+## API Endpoints
 
-**Core Infrastructure**
+### Research Papers
 
-- FastAPI with async/await
-- PostgreSQL (Docker/Supabase/Neon/Railway)
-- SQLAlchemy + Alembic migrations
-- Pydantic settings with .env support
+| Method   | Path                                    | Description                         |
+|----------|-----------------------------------------|-------------------------------------|
+| `POST`   | `/research/papers`                      | Add a new research paper            |
+| `GET`    | `/research/papers`                      | List papers (paginated, tag filter) |
+| `GET`    | `/research/papers/{id}`                 | Fetch a single paper                |
+| `PATCH`  | `/research/papers/{id}`                 | Partially update a paper            |
+| `DELETE` | `/research/papers/{id}`                 | Delete a paper                      |
+| `POST`   | `/research/papers/{id}/analyse`         | LLM-powered scientific analysis     |
 
-**Developer Experience**
+### Health Checks
 
-- Strict type checking (MyPy + Pyright)
-- Ruff linting & formatting
-- Structured logging with request correlation
-- Health check endpoints
-- Docker multi-stage builds
+| Method | Path            | Description                    |
+|--------|-----------------|--------------------------------|
+| `GET`  | `/health`       | API health status              |
+| `GET`  | `/health/db`    | Database connectivity check    |
+| `GET`  | `/health/ready` | Full readiness check           |
 
-**AI Optimization**
+## LLM Integration
 
-- Grep-able event logging
-- Consistent naming patterns
-- Shared utilities (pagination, timestamps)
-- Self-correcting feedback loops
+The `/research/papers/{id}/analyse` endpoint sends a paper's title, abstract, and metadata to a configured LLM alongside a scientific question.  The LLM is prompted as a prosthetics research expert.
+
+**Supported providers:**
+
+- **OpenAI** – set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` (default: `gpt-4o`)
+- **Anthropic** – set `ANTHROPIC_API_KEY` and optionally `ANTHROPIC_MODEL` (default: `claude-opus-4-5`)
+
+Set `LLM_PROVIDER=openai` or `LLM_PROVIDER=anthropic` to select the active provider.
+
+**Example request:**
+
+```json
+POST /research/papers/1/analyse
+{
+  "paper_id": 1,
+  "question": "What are the main limitations of this study and how could future work address them?"
+}
+```
 
 ## Project Structure
 
 ```
 app/
-├── core/           # Infrastructure (config, database, logging, middleware)
+├── core/           # Infrastructure (config, database, logging, middleware, LLM client)
 ├── shared/         # Cross-feature utilities (pagination, timestamps)
-├── examples/       # Example feature slice (delete in your project)
-└── main.py         # FastAPI application
+├── research/       # Research papers feature slice
+│   ├── models.py   # ResearchPaper SQLAlchemy model
+│   ├── schemas.py  # Pydantic schemas
+│   ├── service.py  # Business logic (CRUD + LLM analysis)
+│   ├── routes.py   # FastAPI routes
+│   └── tests/      # Unit tests
+└── main.py         # FastAPI application entry point
 ```
-
-## Customization
-
-1. Update `name` in `pyproject.toml`
-2. Update `APP_NAME` in `.env.example`
-3. Copy `.env.example` to `.env`
-4. Update database name/credentials
-5. Delete `app/examples/` (demo feature)
-6. Build your first feature slice
 
 ## Database Providers
 
@@ -75,7 +99,7 @@ Works with any PostgreSQL provider:
 
 ```bash
 # Docker (default)
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5433/mydb
+DATABASE_URL=******localhost:5433/prosthetics_db
 
 # Supabase
 DATABASE_URL=postgresql+asyncpg://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
@@ -94,8 +118,8 @@ DATABASE_URL=postgresql+asyncpg://postgres:[PASSWORD]@[HOST].railway.app:[PORT]/
 uv run uvicorn app.main:app --reload --port 8123
 
 # Testing
-uv run pytest -v                    # All tests
-uv run pytest -v -m integration     # Integration tests only
+uv run pytest -v                    # All tests (no DB required for unit tests)
+uv run pytest -v -m integration     # Integration tests (requires live DB)
 
 # Type checking
 uv run mypy app/
@@ -116,70 +140,18 @@ docker-compose logs -f app          # View logs
 docker-compose down                 # Stop services
 ```
 
-## Slash Commands
-
-Built-in Claude Code commands:
-
-- `/commit` - Create atomic commits with proper messages
-- `/validate` - Run full validation suite (tests, types, linting, docker)
-- `/check-ignore-comments` - Analyze type suppressions
-
-## Features
-
-- Type safety: Strict mode, zero suppressions
-- Testing: 34 tests, <0.3s execution
-- Logging: JSON structured, request correlation
-- CORS: Configured for local development
-- Migrations: Alembic with async support
-- Health checks: `/health`, `/health/db`, `/health/ready`
-- Docker: Multi-stage builds, hot reload
-- Pagination: Shared utilities, consistent patterns
-- Timestamps: Automatic tracking on all models
-
-## Architecture Principles
-
-**Vertical Slice**
-
-- Features own their database models, logic, and routes
-- Core infrastructure (config, database, logging) is shared
-- Shared utilities extracted when used by 3+ features
-
-**AI-Friendly**
-
-- Grep-able structured logging: `logger.info("feature.action.status")`
-- Type hints everywhere: AI understands contracts
-- Consistent patterns: Predictable code generation
-- Fast feedback: Linting/typing catches errors immediately
-
 ## Tech Stack
 
-**Backend**
-
-- Python 3.12+
-- FastAPI 0.120+
-- SQLAlchemy 2.0+ (async)
-- Pydantic 2.0+
-
-**Database**
-
-- PostgreSQL 18 (any provider)
-- Alembic migrations
-- asyncpg driver
-
-**Dev Tools**
-
-- uv (package manager)
-- Ruff (linting/formatting)
-- MyPy + Pyright (type checking)
-- pytest (testing)
-- Docker + Docker Compose
-
-## Requirements
-
-- Python 3.12+
-- uv (or pip)
-- Docker + Docker Compose
-- PostgreSQL 18+ (via Docker or cloud provider)
+- **Python 3.12+** with strict type checking (MyPy + Pyright)
+- **FastAPI** – async web framework
+- **PostgreSQL** – relational database (any provider)
+- **SQLAlchemy 2.0** – async ORM
+- **Alembic** – schema migrations
+- **structlog** – structured JSON logging with request correlation
+- **httpx** – async HTTP client for LLM API calls
+- **uv** – fast Python package manager
+- **Ruff** – linting and formatting
+- **pytest** – testing
 
 ## License
 
